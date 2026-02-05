@@ -1,0 +1,21 @@
+p = int(input().strip())
+A = list(map(int, input().split()))
+q = int(input().strip())
+B = list(map(int, input().split()))
+
+i = j = 0
+merged = []
+
+while i < p and j < q:
+    if A[i] <= B[j]:
+        merged.append(A[i])
+        i += 1
+    else:
+        merged.append(B[j])
+        j += 1
+
+# append remaining elements
+merged.extend(A[i:])
+merged.extend(B[j:])
+
+print(*merged)
