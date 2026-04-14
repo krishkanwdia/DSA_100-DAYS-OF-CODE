@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node {
+    int vertex;
+    struct Node* next;
+} Node;
+
+typedef struct Graph {
+    int V;
+    Node** adj;
+} Graph;
+
+typedef struct Queue {
+    int* data;
+    int front, rear;
+} Queue;
+
+Node* createNode(int v) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->vertex = v;
+    newNode->next = NULL;
+    return newNode;
+}
+
+Graph* createGraph(int V) {
+    Graph* graph = (Graph*)malloc(sizeof(Graph));
+    graph->V = V;
+    graph->adj = (Node**)malloc(V * sizeof(Node*));
+    for (int i = 0; i < V; i++)
+        graph->adj[i] = NULL;
+    return graph;
+}
+
+void addEdge(Graph* graph, int src, int dest) {
+    Node* newNode = createNode(dest);
+    newNode->next = graph->adj[src];
+    graph->adj[src] = newNode;
+}
+
+Queue* createQueue(int capacity) {
+    Queue* q = (Queue*)malloc(sizeof(Queue));
+    q->data = (int*)malloc(capacity * sizeof(int));
+    q->front = 0;
+    q->rear = 0;
+    return q;
+}
+
+int isEmpty(Queue* q) {
+    return q->front == q->rear;
+}
+
+void enqueue(Queue* q, int value) {
+    q->data[q->rear++] = value;
+}
+
+int dequeue(Queue* q) {
+    return q->data[q->front++];
+}
+
+void topologicalSort(Graph* graph) {
+    int V = graph->V;
+    int* indegree = (int*)calloc(V, sizeof(int));
+
+    for (int i = 0; i < V; i++) {
+        Node* temp = graph->adj[i];
+        while (temp) {
+            indegree[temp->vertex]++;
+            temp = temp->next;
+        }
+    }
+
+    Queue* q = createQueue(V);
+
+    for (int i = 0; i < V; i++) {
+        if (indegree[i] == 0)
+            enqueue(q, i);
+    }
+
+    int count = 0;
+    int* topoOrder = (int*)malloc(V * sizeof(int));
+
+    while (!isEmpty(q)) {
+        int u = dequeue(q);
+        topoOrder[count++] = u;
+
+        Node* temp = graph->adj[u];
+        while (temp) {
+            int v = temp->vertex;
+            if (--indegree[v] == 0)
+                enqueue(q, v);
+            temp = temp->next;
+        }
+    }
+
+    if (count != V) {
+        printf("Cycle detected. Topological sorting not possible.\n");
+    } else {
+        printf("Topological Ordering: ");
+        for (int i = 0; i < V; i++)
+            printf("%d ", topoOrder[i]);
+        printf("\n");
+    }
+
+    free(indegree);
+    free(topoOrder);
+    free(q->data);
+    free(q);
+}
+
+void freeGraph(Graph* graph) {
+    for (int i = 0; i < graph->V; i++) {
+        Node* temp = graph->adj[i];
+        while (temp) {
+            Node* next = temp;
+            temp = temp->next;
+            free(next);
+        }
+    }
+    free(graph->adj);
+    free(graph);
+}
+
+int main() {
+    int V = 6;
+    Graph* graph = createGraph(V);
+
+    addEdge(graph, 5, 2);
+    addEdge(graph, 5, 0);
+    addEdge(graph, 4, 0);
+    addEdge(graph, 4, 1);
+    addEdge(graph, 2, 3);
+    addEdge(graph, 3, 1);
+
+    topologicalSort(graph);
+
+    freeGraph(graph);
+    return 0;
+}
