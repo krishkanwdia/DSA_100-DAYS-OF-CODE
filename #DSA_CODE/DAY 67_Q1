@@ -1,0 +1,116 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+typedef struct Node {
+    int vertex;
+    struct Node* next;
+} Node;
+
+typedef struct Graph {
+    int V;
+    Node** adj;
+} Graph;
+
+typedef struct Stack {
+    int* data;
+    int top;
+    int capacity;
+} Stack;
+
+Node* createNode(int v) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->vertex = v;
+    newNode->next = NULL;
+    return newNode;
+}
+
+Graph* createGraph(int V) {
+    Graph* graph = (Graph*)malloc(sizeof(Graph));
+    graph->V = V;
+    graph->adj = (Node**)malloc(V * sizeof(Node*));
+    for (int i = 0; i < V; i++)
+        graph->adj[i] = NULL;
+    return graph;
+}
+
+void addEdge(Graph* graph, int src, int dest) {
+    Node* newNode = createNode(dest);
+    newNode->next = graph->adj[src];
+    graph->adj[src] = newNode;
+}
+
+Stack* createStack(int capacity) {
+    Stack* stack = (Stack*)malloc(sizeof(Stack));
+    stack->capacity = capacity;
+    stack->top = -1;
+    stack->data = (int*)malloc(capacity * sizeof(int));
+    return stack;
+}
+
+void push(Stack* stack, int value) {
+    stack->data[++stack->top] = value;
+}
+
+int pop(Stack* stack) {
+    return stack->data[stack->top--];
+}
+
+bool isEmpty(Stack* stack) {
+    return stack->top == -1;
+}
+
+void dfs(int v, Graph* graph, bool* visited, Stack* stack) {
+    visited[v] = true;
+    Node* temp = graph->adj[v];
+    while (temp) {
+        if (!visited[temp->vertex])
+            dfs(temp->vertex, graph, visited, stack);
+        temp = temp->next;
+    }
+    push(stack, v);
+}
+
+void topologicalSort(Graph* graph) {
+    bool* visited = (bool*)calloc(graph->V, sizeof(bool));
+    Stack* stack = createStack(graph->V);
+
+    for (int i = 0; i < graph->V; i++)
+        if (!visited[i])
+            dfs(i, graph, visited, stack);
+
+    while (!isEmpty(stack))
+        printf("%d ", pop(stack));
+    printf("\n");
+
+    free(visited);
+    free(stack->data);
+    free(stack);
+}
+
+int main() {
+    int V = 6;
+    Graph* graph = createGraph(V);
+
+    addEdge(graph, 5, 2);
+    addEdge(graph, 5, 0);
+    addEdge(graph, 4, 0);
+    addEdge(graph, 4, 1);
+    addEdge(graph, 2, 3);
+    addEdge(graph, 3, 1);
+
+    topologicalSort(graph);
+
+    for (int i = 0; i < V; i++) {
+        Node* temp = graph->adj[i];
+        while (temp) {
+            Node* next = temp;
+            temp = temp->next;
+            free(next);
+        }
+    }
+    free(graph->adj);
+    free(graph);
+
+    return 0;
+}
