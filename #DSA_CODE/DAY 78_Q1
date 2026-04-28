@@ -1,0 +1,55 @@
+#include <stdio.h>
+
+#define INF 1000000000
+#define SIZE 105
+
+int cost[SIZE][SIZE];
+int visited[SIZE];
+int key[SIZE];
+
+int main() {
+    int n, m;
+    scanf("%d %d", &n, &m);
+
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            cost[i][j] = INF;
+        }
+        visited[i] = 0;
+        key[i] = INF;
+    }
+
+    for (int i = 0; i < m; i++) {
+        int u, v, w;
+        scanf("%d %d %d", &u, &v, &w);
+        cost[u][v] = w;
+        cost[v][u] = w;
+    }
+
+    key[1] = 0;
+    int total = 0;
+
+    for (int count = 1; count <= n; count++) {
+        int u = -1, mn = INF;
+
+        for (int i = 1; i <= n; i++) {
+            if (!visited[i] && key[i] < mn) {
+                mn = key[i];
+                u = i;
+            }
+        }
+
+        visited[u] = 1;
+        total += key[u];
+
+        for (int v = 1; v <= n; v++) {
+            if (!visited[v] && cost[u][v] < key[v]) {
+                key[v] = cost[u][v];
+            }
+        }
+    }
+
+    printf("%d\n", total);
+
+    return 0;
+}
