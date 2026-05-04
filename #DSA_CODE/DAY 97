@@ -1,0 +1,75 @@
+#include <stdlib.h>
+
+int cmp(const void* a, const void* b) {
+    int* x = *(int**)a;
+    int* y = *(int**)b;
+    return x[0] - y[0];
+}
+
+typedef struct {
+    int* data;
+    int size;
+} MinHeap;
+
+void swap(int* a, int* b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
+void heapifyUp(MinHeap* h, int i) {
+    while (i > 0) {
+        int p = (i - 1) / 2;
+        if (h->data[p] <= h->data[i]) break;
+        swap(&h->data[p], &h->data[i]);
+        i = p;
+    }
+}
+
+void heapifyDown(MinHeap* h, int i) {
+    while (1) {
+        int l = 2*i + 1, r = 2*i + 2, smallest = i;
+        if (l < h->size && h->data[l] < h->data[smallest]) smallest = l;
+        if (r < h->size && h->data[r] < h->data[smallest]) smallest = r;
+        if (smallest == i) break;
+        swap(&h->data[i], &h->data[smallest]);
+        i = smallest;
+    }
+}
+
+void push(MinHeap* h, int val) {
+    h->data[h->size++] = val;
+    heapifyUp(h, h->size - 1);
+}
+
+void pop(MinHeap* h) {
+    h->data[0] = h->data[--h->size];
+    heapifyDown(h, 0);
+}
+
+int top(MinHeap* h) {
+    return h->data[0];
+}
+
+int minMeetingRooms(int** intervals, int intervalsSize, int* intervalsColSize) {
+    if (intervalsSize == 0) return 0;
+
+    qsort(intervals, intervalsSize, sizeof(int*), cmp);
+
+    MinHeap h;
+    h.data = (int*)malloc(intervalsSize * sizeof(int));
+    h.size = 0;
+
+    push(&h, intervals[0][1]);
+
+    for (int i = 1; i < intervalsSize; i++) {
+        if (intervals[i][0] >= top(&h)) {
+            pop(&h);
+        }
+        push(&h, intervals[i][1]);
+    }
+
+    int result = h.size;
+    free(h.data);
+    return result;
+}
